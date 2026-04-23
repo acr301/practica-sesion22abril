@@ -30,11 +30,7 @@ class MainActivity : ComponentActivity() {
             
             HabitAppTheme(darkTheme = isDarkTheme) {
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    floatingActionButton = {
-                        // We will place the FAB inside DashboardScreen Box for more control if needed, 
-                        // but standard Scaffold is also fine. Let's keep it in the Box for custom positioning.
-                    }
+                    modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
                     DashboardScreen(
                         modifier = Modifier.padding(innerPadding),
@@ -64,7 +60,11 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            HeaderSection(name = "Ana")
+            HeaderSection(
+                name = "Ana",
+                isDarkTheme = isDarkTheme,
+                onThemeToggle = onThemeToggle
+            )
             Spacer(modifier = Modifier.height(24.dp))
             ProgressCard(progress = progress)
             Spacer(modifier = Modifier.height(24.dp))
@@ -77,19 +77,6 @@ fun DashboardScreen(
                         if (it.id == habitId) it.copy(isCompleted = !it.isCompleted) else it
                     }
                 }
-            )
-        }
-
-        // Theme Toggle Button (Bottom Left)
-        FilledTonalIconButton(
-            onClick = onThemeToggle,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(24.dp)
-        ) {
-            Icon(
-                imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                contentDescription = "Cambiar tema"
             )
         }
 

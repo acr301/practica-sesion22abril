@@ -12,10 +12,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,9 +32,14 @@ import java.time.format.TextStyle
 import java.util.*
 
 @Composable
-fun HeaderSection(name: String) {
+fun HeaderSection(
+    name: String,
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit
+) {
     val today = LocalDate.now()
     val dateText = "${today.dayOfMonth} ${today.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es-ES"))}"
+    var showMenu by remember { mutableStateOf(false) }
     
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -51,8 +58,37 @@ fun HeaderSection(name: String) {
                 color = Color.Gray
             )
         }
-        IconButton(onClick = { }) {
-            Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { }) {
+                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+            }
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Opciones")
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { 
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(if (isDarkTheme) "Modo Claro" else "Modo Oscuro")
+                            }
+                        },
+                        onClick = {
+                            onThemeToggle()
+                            showMenu = false
+                        }
+                    )
+                }
+            }
         }
     }
 }

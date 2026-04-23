@@ -20,23 +20,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ni.edu.uam.habitapp.model.Habit
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.*
 
 @Composable
 fun HeaderSection(name: String) {
+    val today = LocalDate.now()
+    val dateText = "${today.dayOfMonth} ${today.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es-ES"))}"
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "Hola, $name 👋",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Column {
+            Text(
+                text = "Hola, $name 👋",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = dateText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+        }
         IconButton(onClick = { }) {
             Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
         }
@@ -47,12 +61,17 @@ fun HeaderSection(name: String) {
 fun ProgressCard(progress: Float) {
     val animatedProgress by animateFloatAsState(targetValue = progress, label = "progressAnimation")
     
+    // Gradient logic: Red (0%) to Green (100%)
+    val startColor = Color(0xFFFF5252) // Red
+    val endColor = Color(0xFF66BB6A)   // Green
+    val progressColor = lerp(startColor, endColor, progress)
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        colors = CardDefaults.cardColors(containerColor = progressColor.copy(alpha = 0.15f))
     ) {
         Box(
             modifier = Modifier
@@ -63,7 +82,8 @@ fun ProgressCard(progress: Float) {
                 Text(
                     text = "Progreso de hoy",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    fontWeight = FontWeight.Bold,
+                    color = progressColor
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Box(
@@ -71,14 +91,14 @@ fun ProgressCard(progress: Float) {
                         .fillMaxWidth(0.7f)
                         .height(12.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
+                        .background(progressColor.copy(alpha = 0.2f))
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(animatedProgress)
                             .fillMaxHeight()
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(progressColor)
                     )
                 }
             }
@@ -87,17 +107,18 @@ fun ProgressCard(progress: Float) {
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.align(Alignment.CenterEnd),
-                color = MaterialTheme.colorScheme.primary
+                color = progressColor
             )
         }
     }
 }
 
 @Composable
-fun WeeklySummarySection() {
+fun WeeklySummarySection(progress: Float) {
     val days = listOf("L", "M", "X", "J", "V", "S", "D")
-    val completedDays = listOf(true, true, false, true, false, false, false)
-
+    // Get current day of week (1=Mon, 7=Sun)
+    val currentDayIndex = LocalDate.now().dayOfWeek.value - 1
+    
     Column {
         Text(
             text = "Resumen semanal",
@@ -110,22 +131,40 @@ fun WeeklySummarySection() {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             days.forEachIndexed { index, day ->
-                val isCompleted = completedDays[index]
+                // Simulate: previous days are random, current day uses actual progress
+                val isCompleted = if (index < currentDayIndex) {
+                    index % 2 == 0 // Fake data for previous days
+                } else if (index == currentDayIndex) {
+                    progress >= 0.8f // Consider "completed" if progress is high
+                } else {
+                    false // Future days
+                }
+
+                val isToday = index == currentDayIndex
+
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(
-                                if (isCompleted) Color(0xFF4CAF50) else Color.LightGray.copy(alpha = 0.4f)
+                                when {
+                                    isCompleted -> Color(0xFF4CAF50)
+                                    isToday -> MaterialTheme.colorScheme.primaryContainer
+                                    else -> Color.LightGray.copy(alpha = 0.4f)
+                                }
+                            )
+                            .then(
+                                if (isToday) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                                else Modifier
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = day,
-                            color = if (isCompleted) Color.White else Color.DarkGray,
+                            color = if (isCompleted) Color.White else if (isToday) MaterialTheme.colorScheme.primary else Color.DarkGray,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Bold
                         )
                     }
                 }

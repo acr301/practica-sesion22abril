@@ -171,7 +171,7 @@ fun WeeklySummarySection(progress: Float) {
                 val isCompleted = if (index < currentDayIndex) {
                     index % 2 == 0 // Fake data for previous days
                 } else if (index == currentDayIndex) {
-                    progress >= 0.8f // Consider "completed" if progress is high
+                    progress >= 1.0f // All habits must be completed to mark today as complete
                 } else {
                     false // Future days
                 }
